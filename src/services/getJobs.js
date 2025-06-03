@@ -22,8 +22,8 @@ const getJobs = async (params) => {
 
   const resource = {
     method: 'GET',
-    url: 'https://jobs-api14.p.rapidapi.com/list',
-    params: {...params},
+    url: 'https://jobs-api14.p.rapidapi.com/v2/list',
+    params: { ...params },
     headers: {
       'X-RapidAPI-Key': import.meta.env.VITE_JOBS_API_KEY,
       'X-RapidAPI-Host': 'jobs-api14.p.rapidapi.com'
