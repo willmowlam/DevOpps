@@ -25,6 +25,9 @@ function JobSearch() {
   // Cache each page of job search results
   const [pageCache, setPageCache] = useState({});
 
+  // Store the next page tokens for pagination
+  const [nextPageTokens, setNextPageTokens] = useState({0: null}); 
+
   // Test for initial render
   const [initialRender, setInitialRender] = useState(true);
 
@@ -101,6 +104,7 @@ function JobSearch() {
   const handleJobSearchClear = () => {
     setFormData({ query: '', location: '' });
     setReset(true);
+    setPageCache({}); // Clear the cache
   };
 
   // Handle form submission
