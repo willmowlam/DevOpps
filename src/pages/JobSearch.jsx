@@ -22,6 +22,9 @@ function JobSearch() {
   // Job search results
   const [jobs, setJobs] = useState([]);
 
+  // Cache each page of job search results
+  const [pageCache, setPageCache] = useState({});
+
   // Test for initial render
   const [initialRender, setInitialRender] = useState(true);
 
@@ -101,7 +104,13 @@ function JobSearch() {
   };
 
   // Handle form submission
-  const handleJobSearch = async () => {
+  const handleJobSearch = async (requestedPage = page) => {
+
+    // Show cached results if available
+    if (pageCache[requestedPage]) {
+      setJobs(pageCache[requestedPage]);
+      return;
+    }
 
     setIsSearching(true);
 
@@ -145,6 +154,12 @@ function JobSearch() {
       setJobs(response.data.jobs);
       // console.log(response);
 
+      // Add this page's results to the cache
+      setPageCache((prevCache) => ({
+        ...prevCache,
+        [requestedPage]: response.data.jobs,
+      }));
+
       // Track we have done a search
       setReset(false);
     }
@@ -160,6 +175,7 @@ function JobSearch() {
   const handleSearchFormSubmit = async (event) => {
     event.preventDefault();
     setPage(0);
+    setPageCache({}); // Clear the cache
     await handleJobSearch();
   }
 
