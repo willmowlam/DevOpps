@@ -35,10 +35,10 @@ const getJobs = async (params) => {
 
   try {
     const response = await axios.request(resource);
-    return response;
+    return { response, error: null };
   } catch (error) {
     console.error(error);
-    return null;
+    return { response: null, error: error.message || 'Unknown error' };
   }
 
 };

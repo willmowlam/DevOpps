@@ -38,11 +38,13 @@ function JobSearch() {
   const [formData, setFormData] = useState({
     query: '',
     location: '',
-    distance: '',
     remoteOnly: false,
     datePosted: '',
     employmentTypes: '',
   });
+  
+  // Error state
+  const [error, setError] = useState(null);
 
   // Get querystring values and set form data on first render or do a default initial search
   useEffect(() => {
@@ -121,10 +123,10 @@ function JobSearch() {
     // Read the nextPage token for the requested page
     const nextPageToken = nextPageTokens[requestedPage]; 
 
-    let response;
+    let response, error;
 
     if (nextPageToken) {
-      response = await getJobs({nextPage: nextPageToken});
+      ({ response, error } = await getJobs({ nextPage: nextPageToken }));
     } else {
 
       // Get query and location from URL if provided
@@ -151,13 +153,13 @@ function JobSearch() {
       if (query && location) {
 
         // Get jobs from API
-        response = await getJobs({
+        ({ response, error } = await getJobs({
           query: query,
           location: location,
           remoteOnly: formData.remoteOnly ? 'true' : 'false',
           datePosted: formData.datePosted,
           employmentTypes: formData.employmentTypes,
-        });
+        }));
       } else {
         // If no query or location, return empty results
         setIsSearching(false);
@@ -165,8 +167,19 @@ function JobSearch() {
       }
     }
 
+    // Handle errors
+    if (error) {
+      console.error('Error fetching jobs:', error);
+      setError(error);
+      setIsSearching(false);
+      setJobs([]);
+      setPageCache({});
+      return;
+    }
+
     // Update jobs array
-    setJobs(response.data.jobs);
+    setJobs(response.data.jobs ? response.data.jobs : []);
+    setError(null);
 
     // Add this page's results to the cache
     setPageCache((prevCache) => ({
@@ -346,6 +359,38 @@ function JobSearch() {
 
               <div className="mt-9">
                 {
+                /* Show error message if there is an error */
+                error && (
+                  <div className="mb-4 p-5 rounded-lg bg-red-100 text-red-700 border border-red-300 flex justify-left relative">
+                    <svg
+                        className="w-5 h-5 mr-2 text-red-700"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    <p>    
+                      <span className="font-semibold">Error!</span> {error}. Please try again later.
+                    </p>
+                      <button
+                        type="button"
+                        className="absolute top-2 right-2 text-red-700 hover:text-red-900 text-lg font-bold focus:outline-none"
+                        onClick={() => { setError(null); }}
+                        aria-label="Dismiss error"
+                      >
+                        &times;
+                      </button>
+                  </div>
+                )}
+
+                {
                   // Show appropriate messages or results
                   isSearching ? <Spinner className='load-spinner'/> : (jobs.length === 0 && !isSearching && !isReset) ? "No jobs found" : <JobSearchResults jobs={jobs} handleJobSelection={handleJobSelection} />
                 }
@@ -359,7 +404,6 @@ function JobSearch() {
                 </div>
               )}
             </section>
-            
           </div>
         )}
       </div>
