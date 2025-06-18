@@ -4,7 +4,7 @@ import axios from 'axios';
  * getJobs from Jobs API (via Rapid API).
  * 
  * 
- * @param params An object of parameters {query, location, distance, language, remoteOnly, datePosted, employmentTypes, index}
+ * @param params An object of parameters {query, location, remoteOnly, datePosted, employmentTypes, nextPage}
  * @returns An array of job objects
  * 
  * See: https://rapidapi.com/Pat92/api/jobs-api14
@@ -12,12 +12,15 @@ import axios from 'axios';
  **/
 const getJobs = async (params) => {
 
-  if (!params.query) {
-    throw new Error('The query parameter is required.');
-  }
+  // If there isn't a nextPage token then we need at least a query and location
+  if (!params.nextPage){
+    if (!params.query) {
+      throw new Error('The query parameter is required.');
+    }
 
-  if (!params.location) {
-    throw new Error('The location parameter is required.');
+    if (!params.location) {
+      throw new Error('The location parameter is required.');
+    }
   }
 
   const resource = {

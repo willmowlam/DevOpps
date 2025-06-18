@@ -118,55 +118,70 @@ function JobSearch() {
 
     setIsSearching(true);
 
-    // Get query and location from URL if provided
-    const queryString = new URLSearchParams(window.location.search);
-    const qsTitle = queryString.get('title');
-    const qsLocation = queryString.get('location');
+    // Read the nextPage token for the requested page
+    const nextPageToken = nextPageTokens[requestedPage]; 
 
-    let query;
-    let location;
+    let response;
 
-    if (!formData.query) {
-      query = qsTitle;
+    if (nextPageToken) {
+      response = await getJobs({nextPage: nextPageToken});
     } else {
-      query = formData.query;
+
+      // Get query and location from URL if provided
+      const queryString = new URLSearchParams(window.location.search);
+      const qsTitle = queryString.get('title');
+      const qsLocation = queryString.get('location');
+
+      let query;
+      let location;
+
+      if (!formData.query) {
+        query = qsTitle;
+      } else {
+        query = formData.query;
+      }
+
+      if (!formData.location) {
+        location = qsLocation;
+      } else {
+        location = formData.location;
+      }
+
+      // So long as we have a query and location, we can search
+      if (query && location) {
+
+        // Get jobs from API
+        response = await getJobs({
+          query: query,
+          location: location,
+          remoteOnly: formData.remoteOnly ? 'true' : 'false',
+          datePosted: formData.datePosted,
+          employmentTypes: formData.employmentTypes,
+        });
+      } else {
+        // If no query or location, return empty results
+        setIsSearching(false);
+        return;
+      }
     }
 
-    if (!formData.location) {
-      location = qsLocation;
-    } else {
-      location = formData.location;
-    }
+    // Update jobs array
+    setJobs(response.data.jobs);
 
-    // So long as we have a query and location, we can search
-    if (query && location) {
+    // Add this page's results to the cache
+    setPageCache((prevCache) => ({
+      ...prevCache,
+      [requestedPage]: response.data.jobs,
+    }));
 
-      //console.log(formData)
+    // Add the nextPage token
+    setNextPageTokens((prevTokens) => ({
+      ...prevTokens,
+      [requestedPage + 1]: response.data.nextPage || null,
+    }));
 
-      // Get jobs from API
-      const response = await getJobs({
-        query: query,
-        location: location,
-        distance: formData.distance,
-        remoteOnly: formData.remoteOnly ? 'true' : 'false',
-        datePosted: formData.datePosted,
-        employmentTypes: formData.employmentTypes,
-        index: page
-      });
-
-      // Update jobs array
-      setJobs(response.data.jobs);
-      // console.log(response);
-
-      // Add this page's results to the cache
-      setPageCache((prevCache) => ({
-        ...prevCache,
-        [requestedPage]: response.data.jobs,
-      }));
-
-      // Track we have done a search
-      setReset(false);
-    }
+    // Track we have done a search
+    setReset(false);
 
     // Remove the query string from the URL
     const urlWithoutQueryString = window.location.pathname;
@@ -196,11 +211,11 @@ function JobSearch() {
     return () => {
       window.removeEventListener("scroll", handleScrollBtnVisibility);
     };
-    }, []);
+  }, []);
 
-    const handleScrollToTop = () => {
-      window.scrollTo({ top:0, behavior:"smooth"});
-    };
+  const handleScrollToTop = () => {
+    window.scrollTo({ top:0, behavior:"smooth"});
+  };
 
   return (
 
@@ -268,22 +283,6 @@ function JobSearch() {
                       </div>
 
                       <div className="col-span-full">
-                        <label htmlFor="Distance" className="block text-sm font-medium leading-6 text-gray-900 text-left">
-                          Distance (km)
-                        </label>
-                        <div className="mt-2">
-                          <input
-                            value={formData.distance || ''}
-                            onChange={handleInputChange}
-                            name="distance"
-                            type="text"
-                            placeholder="Distance from location (optional)"
-                            className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="col-span-full">
                         <div className="mt-2">
                           <label htmlFor="remoteOnly" className="text-sm font-medium leading-6 text-gray-900 text-left">
                             Remote Only
@@ -293,7 +292,6 @@ function JobSearch() {
                             onChange={handleCheckboxChange}
                             name="remoteOnly"
                             type="checkbox"
-                            placeholder="Distance from location (optional)"
                             className="rounded-md border-0 py-1.5 ml-3 px-2 text-gray-900 shadow-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                           />
                         </div>
@@ -344,7 +342,7 @@ function JobSearch() {
 
             <section className="w-full md:w-9/12">
 
-              <Pagination page={page} setPage={setPage} isSearching={isSearching} jobsLength={jobs.length} />
+              <Pagination page={page} setPage={setPage} isSearching={isSearching} hasNextPage={!!nextPageTokens[page + 1]} />
 
               <div className="mt-9">
                 {
@@ -353,7 +351,7 @@ function JobSearch() {
                 }
               </div>
 
-              <Pagination page={page} setPage={setPage} isSearching={isSearching} jobsLength={jobs.length} scrollToTop={true} />
+              <Pagination page={page} setPage={setPage} isSearching={isSearching} scrollToTop={true} hasNextPage={!!nextPageTokens[page + 1]} />
 
               {showButton && (
                 <div className={`scrollToTop`}>
