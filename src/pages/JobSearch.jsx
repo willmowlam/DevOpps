@@ -22,6 +22,12 @@ function JobSearch() {
   // Job search results
   const [jobs, setJobs] = useState([]);
 
+  // Cache each page of job search results
+  const [pageCache, setPageCache] = useState({});
+
+  // Store the next page tokens for pagination
+  const [nextPageTokens, setNextPageTokens] = useState({0: null}); 
+
   // Test for initial render
   const [initialRender, setInitialRender] = useState(true);
 
@@ -32,11 +38,13 @@ function JobSearch() {
   const [formData, setFormData] = useState({
     query: '',
     location: '',
-    distance: '',
     remoteOnly: false,
     datePosted: '',
     employmentTypes: '',
   });
+  
+  // Error state
+  const [error, setError] = useState(null);
 
   // Get querystring values and set form data on first render or do a default initial search
   useEffect(() => {
@@ -98,56 +106,95 @@ function JobSearch() {
   const handleJobSearchClear = () => {
     setFormData({ query: '', location: '' });
     setReset(true);
+    setPageCache({}); // Clear the cache
   };
 
   // Handle form submission
-  const handleJobSearch = async () => {
+  const handleJobSearch = async (requestedPage = page) => {
+
+    // Show cached results if available
+    if (pageCache[requestedPage]) {
+      setJobs(pageCache[requestedPage]);
+      return;
+    }
 
     setIsSearching(true);
 
-    // Get query and location from URL if provided
-    const queryString = new URLSearchParams(window.location.search);
-    const qsTitle = queryString.get('title');
-    const qsLocation = queryString.get('location');
+    // Read the nextPage token for the requested page
+    const nextPageToken = nextPageTokens[requestedPage]; 
 
-    let query;
-    let location;
+    let response, error;
 
-    if (!formData.query) {
-      query = qsTitle;
+    if (nextPageToken) {
+      ({ response, error } = await getJobs({ nextPage: nextPageToken }));
     } else {
-      query = formData.query;
+
+      // Get query and location from URL if provided
+      const queryString = new URLSearchParams(window.location.search);
+      const qsTitle = queryString.get('title');
+      const qsLocation = queryString.get('location');
+
+      let query;
+      let location;
+
+      if (!formData.query) {
+        query = qsTitle;
+      } else {
+        query = formData.query;
+      }
+
+      if (!formData.location) {
+        location = qsLocation;
+      } else {
+        location = formData.location;
+      }
+
+      // So long as we have a query and location, we can search
+      if (query && location) {
+
+        // Get jobs from API
+        ({ response, error } = await getJobs({
+          query: query,
+          location: location,
+          remoteOnly: formData.remoteOnly ? 'true' : 'false',
+          datePosted: formData.datePosted,
+          employmentTypes: formData.employmentTypes,
+        }));
+      } else {
+        // If no query or location, return empty results
+        setIsSearching(false);
+        return;
+      }
     }
 
-    if (!formData.location) {
-      location = qsLocation;
-    } else {
-      location = formData.location;
+    // Handle errors
+    if (error) {
+      console.error('Error fetching jobs:', error);
+      setError(error);
+      setIsSearching(false);
+      setJobs([]);
+      setPageCache({});
+      return;
     }
 
-    // So long as we have a query and location, we can search
-    if (query && location) {
+    // Update jobs array
+    setJobs(response.data.jobs ? response.data.jobs : []);
+    setError(null);
 
-      //console.log(formData)
+    // Add this page's results to the cache
+    setPageCache((prevCache) => ({
+      ...prevCache,
+      [requestedPage]: response.data.jobs,
+    }));
 
-      // Get jobs from API
-      const response = await getJobs({
-        query: query,
-        location: location,
-        distance: formData.distance,
-        remoteOnly: formData.remoteOnly ? 'true' : 'false',
-        datePosted: formData.datePosted,
-        employmentTypes: formData.employmentTypes,
-        index: page
-      });
+    // Add the nextPage token
+    setNextPageTokens((prevTokens) => ({
+      ...prevTokens,
+      [requestedPage + 1]: response.data.nextPage || null,
+    }));
 
-      // Update jobs array
-      setJobs(response.data.jobs);
-      // console.log(response);
-
-      // Track we have done a search
-      setReset(false);
-    }
+    // Track we have done a search
+    setReset(false);
 
     // Remove the query string from the URL
     const urlWithoutQueryString = window.location.pathname;
@@ -160,6 +207,7 @@ function JobSearch() {
   const handleSearchFormSubmit = async (event) => {
     event.preventDefault();
     setPage(0);
+    setPageCache({}); // Clear the cache
     await handleJobSearch();
   }
 
@@ -176,11 +224,11 @@ function JobSearch() {
     return () => {
       window.removeEventListener("scroll", handleScrollBtnVisibility);
     };
-    }, []);
+  }, []);
 
-    const handleScrollToTop = () => {
-      window.scrollTo({ top:0, behavior:"smooth"});
-    };
+  const handleScrollToTop = () => {
+    window.scrollTo({ top:0, behavior:"smooth"});
+  };
 
   return (
 
@@ -248,22 +296,6 @@ function JobSearch() {
                       </div>
 
                       <div className="col-span-full">
-                        <label htmlFor="Distance" className="block text-sm font-medium leading-6 text-gray-900 text-left">
-                          Distance (km)
-                        </label>
-                        <div className="mt-2">
-                          <input
-                            value={formData.distance || ''}
-                            onChange={handleInputChange}
-                            name="distance"
-                            type="text"
-                            placeholder="Distance from location (optional)"
-                            className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="col-span-full">
                         <div className="mt-2">
                           <label htmlFor="remoteOnly" className="text-sm font-medium leading-6 text-gray-900 text-left">
                             Remote Only
@@ -273,7 +305,6 @@ function JobSearch() {
                             onChange={handleCheckboxChange}
                             name="remoteOnly"
                             type="checkbox"
-                            placeholder="Distance from location (optional)"
                             className="rounded-md border-0 py-1.5 ml-3 px-2 text-gray-900 shadow-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                           />
                         </div>
@@ -324,16 +355,48 @@ function JobSearch() {
 
             <section className="w-full md:w-9/12">
 
-              <Pagination page={page} setPage={setPage} isSearching={isSearching} jobsLength={jobs.length} />
+              <Pagination page={page} setPage={setPage} isSearching={isSearching} hasNextPage={!!nextPageTokens[page + 1]} />
 
               <div className="mt-9">
+                {
+                /* Show error message if there is an error */
+                error && (
+                  <div className="mb-4 p-5 rounded-lg bg-red-100 text-red-700 border border-red-300 flex justify-left relative">
+                    <svg
+                        className="w-5 h-5 mr-2 text-red-700"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    <p>    
+                      <span className="font-semibold">Error!</span> {error}. Please try again later.
+                    </p>
+                      <button
+                        type="button"
+                        className="absolute top-2 right-2 text-red-700 hover:text-red-900 text-lg font-bold focus:outline-none"
+                        onClick={() => { setError(null); }}
+                        aria-label="Dismiss error"
+                      >
+                        &times;
+                      </button>
+                  </div>
+                )}
+
                 {
                   // Show appropriate messages or results
                   isSearching ? <Spinner className='load-spinner'/> : (jobs.length === 0 && !isSearching && !isReset) ? "No jobs found" : <JobSearchResults jobs={jobs} handleJobSelection={handleJobSelection} />
                 }
               </div>
 
-              <Pagination page={page} setPage={setPage} isSearching={isSearching} jobsLength={jobs.length} scrollToTop={true} />
+              <Pagination page={page} setPage={setPage} isSearching={isSearching} scrollToTop={true} hasNextPage={!!nextPageTokens[page + 1]} />
 
               {showButton && (
                 <div className={`scrollToTop`}>
@@ -341,7 +404,6 @@ function JobSearch() {
                 </div>
               )}
             </section>
-            
           </div>
         )}
       </div>
