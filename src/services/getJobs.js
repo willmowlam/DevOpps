@@ -37,8 +37,10 @@ const getJobs = async (params) => {
     const response = await axios.request(resource);
     return { response, error: null };
   } catch (error) {
-    console.error(error);
-    return { response: null, error: error.message || 'Unknown error' };
+    if (error.response?.status) {
+      return { response: null, error: error.response.status }; // Axios errors
+    }
+    return { response: null, error: error.message || -1 }; // Custom errors thrown
   }
 
 };

@@ -6,12 +6,11 @@
  * Props:
  * - page: The current results page, zero indexed (number)
  * - setPage: setPage(delta) function from parent. (function)
- * - isSearching: Whether the search is currently in progress. (boolean)
  * - scrollToTop: Scroll to the top of the page on page change. (boolean)
  * - hasNextPage: Whether there are more pages of results. (boolean)
  */
 
-const Pagination = ({ page, setPage, isSearching, scrollToTop = false, hasNextPage }) => {
+const Pagination = ({ page, setPage, scrollToTop = false, hasNextPage }) => {
 
   const buttonClass = "rounded-md bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 hover:disabled:bg-indigo-600 disabled:opacity-25";
 
@@ -24,7 +23,7 @@ const Pagination = ({ page, setPage, isSearching, scrollToTop = false, hasNextPa
   };
 
   // Don't render if no pagination required
-  if ((page === 0 && !hasNextPage) || isSearching){
+  if ((page === 0 && !hasNextPage)){
     return null;
   }
 

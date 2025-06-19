@@ -5,6 +5,7 @@ import EmploymentTypes from '../components/JobSearch/EmploymentTypes.jsx';
 import JobDetails from './JobDetails.jsx';
 import {Spinner} from "@nextui-org/react";
 import Pagination from "../components/JobSearch/Pagination.jsx";
+import ErrorMessage from '../components/ErrorMessage';
 
 function JobSearch() {
 
@@ -169,7 +170,6 @@ function JobSearch() {
 
     // Handle errors
     if (error) {
-      console.error('Error fetching jobs:', error);
       setError(error);
       setIsSearching(false);
       setJobs([]);
@@ -355,48 +355,27 @@ function JobSearch() {
 
             <section className="w-full md:w-9/12">
 
-              <Pagination page={page} setPage={setPage} isSearching={isSearching} hasNextPage={!!nextPageTokens[page + 1]} />
+              {!error && !isSearching && (
+                <Pagination page={page} setPage={setPage} hasNextPage={!!nextPageTokens[page + 1]} />
+              )}
 
               <div className="mt-9">
                 {
                 /* Show error message if there is an error */
-                error && (
-                  <div className="mb-4 p-5 rounded-lg bg-red-100 text-red-700 border border-red-300 flex justify-left relative">
-                    <svg
-                        className="w-5 h-5 mr-2 text-red-700"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    <p>    
-                      <span className="font-semibold">Error!</span> {error}. Please try again later.
-                    </p>
-                      <button
-                        type="button"
-                        className="absolute top-2 right-2 text-red-700 hover:text-red-900 text-lg font-bold focus:outline-none"
-                        onClick={() => { setError(null); }}
-                        aria-label="Dismiss error"
-                      >
-                        &times;
-                      </button>
-                  </div>
+                error && !isSearching && (
+                  <ErrorMessage error={error} setError={setError} />
                 )}
 
                 {
                   // Show appropriate messages or results
-                  isSearching ? <Spinner className='load-spinner'/> : (jobs.length === 0 && !isSearching && !isReset) ? "No jobs found" : <JobSearchResults jobs={jobs} handleJobSelection={handleJobSelection} />
+                  error && !isSearching ? null :
+                  isSearching ? <Spinner className='load-spinner'/> : (jobs.length === 0 && !isReset) ? "No jobs found" : <JobSearchResults jobs={jobs} handleJobSelection={handleJobSelection} />
                 }
               </div>
-
-              <Pagination page={page} setPage={setPage} isSearching={isSearching} scrollToTop={true} hasNextPage={!!nextPageTokens[page + 1]} />
+              
+              {!error && !isSearching && (
+                <Pagination page={page} setPage={setPage} scrollToTop={true} hasNextPage={!!nextPageTokens[page + 1]} />
+              )}
 
               {showButton && (
                 <div className={`scrollToTop`}>
