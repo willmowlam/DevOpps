@@ -1,4 +1,4 @@
-import apiCall from "./apiCall";
+const apiCall = require('./apiCall');
 
 /** 
  * Lambda function to fetch job listings from the Jobs API.
@@ -9,7 +9,7 @@ import apiCall from "./apiCall";
  * * @throws {Error} - Throws an error if the request fails or if required parameters are missing.
  **/
 
-export async function handler(event) {
+exports.handler = async function(event) {
 
   const params = event.httpMethod === "POST"
     ? JSON.parse(event.body)

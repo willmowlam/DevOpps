@@ -1,4 +1,4 @@
-import axios from 'axios';
+const axios = require('axios');
 
 /**
  * Generic API call utility for multiple providers.
@@ -67,4 +67,4 @@ const apiCall = async ({
   }
 };
 
-export default apiCall;
+module.exports = apiCall;
