@@ -1,8 +1,7 @@
 {
   "name": "functions",
   "version": "1.0.0",
-  "description": "",
-  "main": "getJobs.js",
+  "description": "Serverless functions for backend API calls on Netlify.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
