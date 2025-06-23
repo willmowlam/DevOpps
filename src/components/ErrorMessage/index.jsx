@@ -26,10 +26,9 @@ const ErrorMessage = ({ error, setError }) => {
 
       <p>
         <span className="font-semibold">Error!</span>{" "}
-        {typeof error === "string"
-          ? error // Show custom error message
+        {error.message? error.message // Show custom error message
           : "Something went wrong. Please try again later."}
-        {typeof error === "number" && error !== -1 ? ` (Error: ${error})` : null}
+        {error.status? ` (Error: ${error.status})` : null}
       </p>
 
       <button
