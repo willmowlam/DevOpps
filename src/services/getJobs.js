@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 /**
  * getJobs from Jobs API (via Rapid API).
  * 
@@ -23,24 +21,28 @@ const getJobs = async (params) => {
     }
   }
 
-  const resource = {
-    method: 'GET',
-    url: 'https://jobs-api14.p.rapidapi.com/v2/list',
-    params: { ...params },
-    headers: {
-      'X-RapidAPI-Key': import.meta.env.VITE_JOBS_API_KEY,
-      'X-RapidAPI-Host': 'jobs-api14.p.rapidapi.com'
-    }
-  };
-
   try {
-    const response = await axios.request(resource);
-    return { response, error: null };
-  } catch (error) {
-    if (error.response?.status) {
-      return { response: null, error: error.response.status }; // Axios errors
+    const response = await fetch('/.netlify/functions/getJobs', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(params),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      const err = new Error(data.message || 'Unknown error');
+      err.status = response.status;
+      throw err;
     }
-    return { response: null, error: error.message || -1 }; // Custom errors thrown
+
+    return { response: { data }, error: null };
+  } catch (error) {
+    return { response: null,     
+      error: {
+        status: error.status || -1,
+        message: error.message || 'Unknown error',
+      }, 
+    };
   }
 
 };
