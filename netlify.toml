@@ -1,4 +1,15 @@
+[build]
+  functions = "netlify/functions"
+  publish = "dist"
+  command = "npm run build"
+
+[dev]
+  functions = "netlify/functions"
+  publish = "dist"
+  command = "npm run dev"
+  port = 3000
+
 [[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
+  from = "/*"
+  to = "/index.html"
+  status = 200
