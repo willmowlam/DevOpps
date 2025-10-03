@@ -16,7 +16,7 @@ exports.handler = async function(event) {
     : event.queryStringParameters;
 
   const { data, error } = await apiCall({
-    endpoint: '/v2/list',
+    endpoint: '/v2/bing/search',
     method: 'GET',
     params,
     headers: {
@@ -32,6 +32,16 @@ exports.handler = async function(event) {
       body: JSON.stringify({ message: error.message }),
       headers: { 'Content-Type': 'application/json' }
     };
+  }
+
+  // Show API errors
+  if (data.hasError || (data.errors && data.errors.length > 0)) {
+    console.error('API errors:', data.errors);
+  }
+
+  // Show API warnings
+  if (data.hasWarning && data.warnings.length > 0) {
+    console.warn('API warnings:', data.warnings);
   }
 
   return {
