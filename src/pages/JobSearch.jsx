@@ -127,7 +127,7 @@ function JobSearch() {
     let response, error;
 
     if (nextPageToken) {
-      ({ response, error } = await getJobs({ nextPage: nextPageToken }));
+      ({ response, error } = await getJobs({ token: nextPageToken }));
     } else {
 
       // Get query and location from URL if provided
@@ -178,19 +178,19 @@ function JobSearch() {
     }
 
     // Update jobs array
-    setJobs(response.data.jobs ? response.data.jobs : []);
+    setJobs(response.data.data ? response.data.data : []);
     setError(null);
 
     // Add this page's results to the cache
     setPageCache((prevCache) => ({
       ...prevCache,
-      [requestedPage]: response.data.jobs,
+      [requestedPage]: response.data.data,
     }));
 
     // Add the nextPage token
     setNextPageTokens((prevTokens) => ({
       ...prevTokens,
-      [requestedPage + 1]: response.data.nextPage || null,
+      [requestedPage + 1]: response.data.meta.nextToken || null,
     }));
 
     // Track we have done a search

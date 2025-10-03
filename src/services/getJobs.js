@@ -11,7 +11,7 @@
 const getJobs = async (params) => {
 
   // If there isn't a nextPage token then we need at least a query and location
-  if (!params.nextPage){
+  if (!params.token){
     if (!params.query) {
       throw new Error('The query parameter is required.');
     }
