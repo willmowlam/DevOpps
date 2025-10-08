@@ -11,7 +11,7 @@ function JobSearchResults({jobs, handleJobSelection}) {
   return (
     <>
       {jobs.map((job, i) => (
-        <Link key={`${i}-${jobs.id}`} onClick={() => handleViewJobDetails(job)} className="w-full mb-1">
+        <Link key={`${i}-${job.id}`} onClick={() => handleViewJobDetails(job)} className="w-full mb-1">
           <JobList
           key={job.id}
           data={{...job}}
