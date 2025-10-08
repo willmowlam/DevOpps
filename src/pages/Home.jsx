@@ -32,7 +32,7 @@ function Home() {
     const option = 'Software Developer';
     const city = cityName;
     setErrorMessage(""); // Clear error message
-    navigate(`/job-results/?title=${option}&location=${city} UK`);
+    navigate(`/job-results/?title=${option}&location=${city} GB`);
     window.scrollTo({ top: 0 });
   };
 

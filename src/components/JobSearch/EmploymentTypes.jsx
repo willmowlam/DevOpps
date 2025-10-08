@@ -14,9 +14,9 @@ function EmploymentTypes({ value, onChange }) {
     let newValue = value || '';
 
     if (checked) {
-      newValue += (newValue ? ',' : '') + name;
+      newValue += (newValue ? ';' : '') + name;
     } else {
-      newValue = newValue.split(',').filter((item) => item !== name).join(',');
+      newValue = newValue.split(';').filter((item) => item !== name).join(';');
     }
 
     // Pass the updated value to the parent component
@@ -54,13 +54,13 @@ function EmploymentTypes({ value, onChange }) {
         <label className={labelClass}>
           <input
             type="checkbox"
-            name="intern"
-            value="intern"
-            checked={value && value.includes('intern')}
+            name="temporary"
+            value="temporary"
+            checked={value && value.includes('temporary')}
             onChange={(e) => handleCheckboxChange(e)}
             className={inputClass}
           />
-          <span className={spanClass}>Intern</span>
+          <span className={spanClass}>Temporary</span>
         </label>
         <label className={labelClass}>
           <input

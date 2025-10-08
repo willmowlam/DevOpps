@@ -60,7 +60,7 @@ function JobSearch() {
     } else {
       setFormData({
         query: 'Software Developer',
-        location: 'UK',
+        location: 'GB',
       });
     }
     document.title = `devOpps - Job Search`;
@@ -153,14 +153,29 @@ function JobSearch() {
       // So long as we have a query and location, we can search
       if (query && location) {
 
-        // Get jobs from API
-        ({ response, error } = await getJobs({
+        // Build params object, only including non-empty values
+        const params = {
           query: query,
           location: location,
-          remoteOnly: formData.remoteOnly ? 'true' : 'false',
-          datePosted: formData.datePosted,
-          employmentTypes: formData.employmentTypes,
-        }));
+        };
+
+        // Add remoteOnly
+        if (formData.remoteOnly) {
+          params.remoteOnly = 'true';
+        }
+
+        // Add Date Posted
+        if (formData.datePosted) {
+          params.datePosted = formData.datePosted;
+        }
+
+        // Add Employment Types
+        if (formData.employmentTypes) {
+          params.employmentTypes = formData.employmentTypes;
+        }
+
+        // Get jobs from API
+        ({ response, error } = await getJobs(params));
       } else {
         // If no query or location, return empty results
         setIsSearching(false);
@@ -322,10 +337,8 @@ function JobSearch() {
                             className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                           >
                             <option value="">Show jobs posted...</option>
-                            <option value="today">Today</option>
-                            <option value="3days">Last 3 days</option>
-                            <option value="week">One week</option>
-                            <option value="month">One month</option>
+                            <option value="day">Today</option>
+                            <option value="week">This week</option>
                           </select>
                         </div>
                       </div>
