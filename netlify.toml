@@ -9,6 +9,9 @@
   command = "npm run dev"
   port = 3000
 
+[[plugins]]
+package = "@netlify/plugin-functions-install-core"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
