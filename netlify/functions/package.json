@@ -11,6 +11,6 @@
   "type": "commonjs",
   "dependencies": {
     "@upstash/redis": "^1.35.5",
-    "axios": "^1.10.0"
+    "axios": "^1.12.2"
   }
 }
