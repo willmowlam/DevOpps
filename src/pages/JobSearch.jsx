@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import getJobs from "../services/getJobs.js";
+import getJob from "../services/getJob.js";
 import JobSearchResults from "../components/JobSearch/Results.jsx";
 import EmploymentTypes from '../components/JobSearch/EmploymentTypes.jsx';
 import JobDetails from './JobDetails.jsx';
@@ -10,8 +11,17 @@ import ErrorMessage from '../components/ErrorMessage';
 function JobSearch() {
 
   const [selectedJob, setSelectedJob] = useState(null);
-  const handleJobSelection = (job) => {
-    setSelectedJob(job);
+  const handleJobSelection = async (job) => {
+
+    // Get job data
+    const { response, error } = await getJob(job.id);
+
+    if (error) {
+      setError(error);
+      return;
+    }
+
+    setSelectedJob(response.data);
     window.scrollTo({ top:0 }); // Go to top of job details page
   };
 
